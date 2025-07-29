@@ -85,7 +85,13 @@ export default function StatsPage() {
             <Flex direction="column" gap="sm" mt="lg">
                 <TextInput label="Hero" placeholder="Lifeweaver (max length: 30)" value={hero} maxLength={30} onChange={e => setHero(e.currentTarget.value)} />
                 <TextInput label="Map" value={map} placeholder="Havana (max length: 30)" maxLength={30} onChange={e => setMap(e.currentTarget.value)} />
-                <TextInput label="Game Mode" value={game_mode} placeholder="Escort (max length: 30)" maxLength={30} onChange={e => setGameMode(e.currentTarget.value)} />
+                <Select
+                    label="Game Mode"
+                    placeholder="Control"
+                    data={["Control", "Escort", "Flashpoint", "Hybrid", "Push"]}
+                    value={game_mode} 
+                    onChange={setGameMode}
+                />
                 <Select
                     label="Result"
                     placeholder="Select from dropdown - W for Win, L for Loss"
