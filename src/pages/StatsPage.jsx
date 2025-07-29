@@ -6,13 +6,54 @@ import { Flex, Container, Table, TextInput, Select, Button } from "@mantine/core
 export default function StatsPage() {
     const [stats, setStats] = useState([]);
 
-    const [hero, setHero] = useState("");
-    const [map, setMap] = useState("");
-    const [game_mode, setGameMode] = useState("");
-    const [result, setResult] = useState("");
-    const [duo, setDuo] = useState("");
+    const [hero, setHero] = useState(null);
+    const [map, setMap] = useState(null);
+    const [game_mode, setGameMode] = useState(null);
+    const [result, setResult] = useState(null);
+    const [duo, setDuo] = useState(null);
 
     const nav = useNavigate();
+
+    const tanklist = ["D.Va", "Doomfist", "Hazard", "Junker Queen",
+        "Mauga", "Orisa", "Ramattra", "Reinhardt", "Roadhog", "Sigma", "Winston", "Wrecking Ball", "Zarya"];
+
+    const dpslist = ["Ashe", "Bastion", "Cassidy", "Echo", "Freja",
+        "Genji", "Hanzo", "Junkrat", "Mei", "Pharah", "Reaper", "Sojourn", "Soldier: 76", "Sombra", "Symmetra", "Torbjörn", "Tracer", "Venture", "Widowmaker"];
+
+    const supplist = ["Ana", "Baptiste", "Brigitte", "Illari", "Juno", "Kiriko", "Lifeweaver", "Lúcio", "Mercy", "Moira", "Zenyatta"];
+
+    const controllist = ["Antarctic Peninsula", "Busan", "Illios", "Lijiang Tower", "Nepal", "Oasis", "Samoa"];
+
+    const escortlist = ["Circuit Royal", "Dorado", "Havana", "Junkertown", "Rialto", "Route 66", "Shambali Monastery", "Watchpoint: Gibraltar"];
+
+    const fplist = ["Aatlis", "New Junk City", "Suravasa"];
+
+    const hybridlist = ["Blizzard World", "Eichenwalde", "Hollywood", "King's Row", "Midtown", "Numbani", "Paraíso"];
+
+    const pushlist = ["Colosseo", "Esperança", "New Queen Street", "Runasapi"];
+
+    const clashlist = ["Hanaoka", "Throne of Anubis"];
+
+    const mapGroupsData = [
+        { group: "Control", items: controllist },
+        { group: "Escort", items: escortlist },
+        { group: "Flashpoint", items: fplist },
+        { group: "Hybrid", items: hybridlist },
+        { group: "Push", items: pushlist },
+        { group: "Clash", items: clashlist },
+    ];
+
+    const heroIsTankOrDPS = hero && tanklist.includes(hero) || hero && dpslist.includes(hero);
+
+    useEffect(() => {
+        if (heroIsTankOrDPS) {
+            setDuo("N/A"); // Clear duo selection if a tank hero is chosen
+        } else {
+            if (duo === "N/A") {
+                setDuo(null);
+            }
+        }
+    }, [heroIsTankOrDPS, duo]); // Rerun when isHeroTank changes
 
     const handleAddStat = async () => {
         const token = localStorage.getItem("access");
@@ -26,11 +67,11 @@ export default function StatsPage() {
             );
             setStats(prev => [...prev, res.data]); // update the table
             // clear the form
-            setHero("");
-            setMap("");
-            setGameMode("");
+            setHero(null);
+            setMap(null);
+            setGameMode(null);
             setResult(null);
-            setDuo("");
+            setDuo(null);
         } catch (err) {
             console.error(err);
         }
@@ -55,6 +96,20 @@ export default function StatsPage() {
                 nav("/login");
             });
     }, []);
+
+    const setGameModeAutomatic = (selectedMap) => {
+        setMap(selectedMap);
+
+        let detectedGameMode = null;
+        for (const group of mapGroupsData) {
+            if (group.items.includes(selectedMap)) {
+                detectedGameMode = group.group;
+                break;
+            }
+        }
+
+        setGameMode(detectedGameMode)
+    }
 
     return (
         <Container>
@@ -83,13 +138,36 @@ export default function StatsPage() {
             </Table>
 
             <Flex direction="column" gap="sm" mt="lg">
-                <TextInput label="Hero" placeholder="Lifeweaver (max length: 30)" value={hero} maxLength={30} onChange={e => setHero(e.currentTarget.value)} />
-                <TextInput label="Map" value={map} placeholder="Havana (max length: 30)" maxLength={30} onChange={e => setMap(e.currentTarget.value)} />
+                <Select
+                    label="Hero"
+                    placeholder="Lifeweaver"
+                    data={[
+                        { group: "Tank", items: tanklist },
+                        { group: "DPS", items: dpslist },
+                        { group: "Support", items: supplist },
+                    ]}
+                    value={hero}
+                    onChange={setHero}
+                />
+                <Select
+                    label="Map"
+                    placeholder="Illios"
+                    data={[
+                        { group: "Control", items: controllist },
+                        { group: "Escort", items: escortlist },
+                        { group: "Flashpoint", items: fplist },
+                        { group: "Hybrid", items: hybridlist },
+                        { group: "Push", items: pushlist },
+                        { group: "Clash", items: clashlist },
+                    ]}
+                    value={map}
+                    onChange={setGameModeAutomatic}
+                />
                 <Select
                     label="Game Mode"
                     placeholder="Control"
-                    data={["Control", "Escort", "Flashpoint", "Hybrid", "Push"]}
-                    value={game_mode} 
+                    data={["Control", "Escort", "Flashpoint", "Hybrid", "Push", "Clash"]}
+                    value={game_mode}
                     onChange={setGameMode}
                 />
                 <Select
@@ -102,7 +180,14 @@ export default function StatsPage() {
                     value={result}
                     onChange={setResult}
                 />
-                <TextInput label="Support Duo" value={duo} placeholder="Ana (max length: 30)" maxLength={30} onChange={e => setDuo(e.currentTarget.value)} />
+                <Select
+                    label="Support Duo"
+                    placeholder="Ana"
+                    data={supplist}
+                    value={duo}
+                    onChange={setDuo}
+                    disabled={heroIsTankOrDPS}
+                />
                 <Button onClick={handleAddStat}>Add Stat</Button>
             </Flex>
         </Container>
